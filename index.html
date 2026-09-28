@@ -114,6 +114,18 @@ h1 em{font-style:normal;color:var(--red)}
  .submit{font-size:20px}
  .total strong{font-size:28px}
 }
+
+
+.password-field{position:relative;display:flex;align-items:center}
+.password-field input{width:100%;padding-right:64px}
+.password-toggle{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  border:0;background:transparent;color:var(--muted);
+  font:inherit;font-size:13px;cursor:pointer;padding:6px;
+}
+.password-toggle:hover{color:var(--red)}
+.password-toggle:focus-visible{outline:1px solid var(--red);outline-offset:2px}
+
 </style>
 </head>
 <body>
@@ -153,7 +165,13 @@ h1 em{font-style:normal;color:var(--red)}
   <div class="panel-title"><h2>Riot 帳號資訊</h2></div>
   <div class="fields">
     <div class="field"><label>Riot 帳號</label><input id="riotUser" autocomplete="off" placeholder="請輸入 Riot 帳號"></div>
-    <div class="field"><label>Riot 密碼</label><input id="riotPass" type="password" autocomplete="off" placeholder="請輸入 Riot 密碼"></div>
+    <div class="field">
+  <label>Riot 密碼</label>
+  <div class="password-field">
+    <input id="riotPass" type="password" autocomplete="off" placeholder="請輸入 Riot 密碼">
+    <button type="button" class="password-toggle" id="toggleRiotPass" aria-label="顯示密碼">顯示</button>
+  </div>
+</div>
     <div class="field"><label>特戰 ID</label><input id="valorantId" placeholder="例如：Player123#TWN"></div>
   </div>
 </section>
@@ -311,5 +329,22 @@ document.getElementById("submitBtn").onclick=async()=>{
 };
 update();
 </script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  const input = document.getElementById("riotPass");
+  const button = document.getElementById("toggleRiotPass");
+  if (!input || !button) return;
+
+  button.addEventListener("click", function(){
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    button.textContent = show ? "隱藏" : "顯示";
+    button.setAttribute("aria-label", show ? "隱藏密碼" : "顯示密碼");
+  });
+});
+</script>
+
 </body>
 </html>
