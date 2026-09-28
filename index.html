@@ -195,7 +195,31 @@ const ENTRY = {
   original:"entry.1426957952", discount:"entry.1863658130", promo:"entry.1015304716",
   final:"entry.220689903"
 };
-const promoCode = "LANGCHENG97";
+// =============================
+// 優惠碼管理區
+// 只需要在這裡新增優惠碼，不用修改下面的計算程式。
+// type:
+//   original  = LANGCHENG97 原本規則
+//   percent   = 百分比折扣，例如 value: 10 代表 9 折
+//   fixed     = 固定折價，例如 value: 50 代表折 NT$50
+// =============================
+const PROMO_CODES = {
+  LANGCHENG97: { type: "percent", value: 3, name: "LangCheng97" },
+
+  // 範例：之後要啟用其他優惠碼時，把 // 拿掉即可。
+  // VIP10: {
+  //   type: "percent",
+  //   value: 10,
+  //   name: "VIP10"
+  // },
+
+  // WELCOME50: {
+  //   type: "fixed",
+  //   value: 50,
+  //   name: "WELCOME50"
+  // }
+};
+
 const qty = Array(PRODUCTS.length).fill(0);
 
 const productsEl=document.getElementById("products");
@@ -221,11 +245,36 @@ function calc(){
   let totalQty=0,totalVp=0,original=0;
   PRODUCTS.forEach((p,i)=>{totalQty+=qty[i];totalVp+=qty[i]*p.vp;original+=qty[i]*p.price;});
   const code=document.getElementById("promo").value.trim().toUpperCase();
-  let discount=0;
-  if(code===promoCode && original>0){
-    // 沿用原本優惠邏輯：11000 VP 每份減 NT$50，其餘 95 折。
-    PRODUCTS.forEach((p,i)=>{if(qty[i]) discount += p.vp===11000 ? qty[i]*50 : Math.round(qty[i]*p.price*0.05);});
+  let discount = 0;
+  const promo = PROMO_CODES[code];
+
+  if (promo && original > 0) {
+
+    if (promo.type === "original") {
+
+      // LANGCHENG97 原本規則：
+      // 11000 VP 每份減 NT$50，其餘 VP 95 折。
+      PRODUCTS.forEach((p, i) => {
+        if (qty[i]) {
+          discount += p.vp === 11000
+            ? qty[i] * 50
+            : Math.round(qty[i] * p.price * 0.05);
+        }
+      });
+
+    } else if (promo.type === "percent") {
+
+      // 百分比折扣：value 10 = 10% off
+      discount = Math.round(original * promo.value / 100);
+
+    } else if (promo.type === "fixed") {
+
+      // 固定折價，最高不超過原始金額
+      discount = Math.min(promo.value, original);
+
+    }
   }
+
   return {totalQty,totalVp,original,discount,final:original-discount};
 }
 function update(){
