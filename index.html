@@ -1,677 +1,145 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
+<!doctype html>
+<html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>特務幣｜快速下單</title>
-  <style>
-    /* VALORANT 風格視覺：背景圖僅作為氛圍層，內容仍保持可讀性 */
-    :root {
-      --bg: #070b0f;
-      --panel: rgba(8, 14, 20, .91);
-      --panel-soft: rgba(18, 27, 36, .82);
-      --border: #263542;
-      --border-hot: #ff4655;
-      --text: #f4f5f6;
-      --muted: #8d98a3;
-      --accent: #ff4655;
-      --accent-dark: #d92e3e;
-      --input: rgba(15, 24, 32, .92);
-    }
-
-    * { box-sizing: border-box; }
-
-    html, body { min-height: 100%; }
-
-    body {
-      margin: 0;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 82% 28%, rgba(255,70,85,.13), transparent 28%),
-        radial-gradient(circle at 15% 15%, rgba(255,70,85,.09), transparent 25%),
-        linear-gradient(135deg, #05080b 0%, #0a1016 48%, #080b0f 100%);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-                   "Noto Sans TC", Arial, sans-serif;
-      line-height: 1.5;
-      overflow-x: hidden;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      opacity: .9;
-      background:
-        linear-gradient(125deg, transparent 0 9%, rgba(255,70,85,.16) 9.1% 13%, transparent 13.1% 100%),
-        linear-gradient(305deg, transparent 0 77%, rgba(255,70,85,.10) 77.1% 82%, transparent 82.1% 100%),
-        linear-gradient(135deg, transparent 0 52%, rgba(255,255,255,.018) 52.1% 52.25%, transparent 52.35% 100%);
-    }
-
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background:
-        linear-gradient(90deg, transparent 0 8%, rgba(255,70,85,.07) 8.1% 8.2%, transparent 8.3% 91.7%, rgba(255,70,85,.05) 91.8% 91.9%, transparent 92%),
-        repeating-linear-gradient(135deg, transparent 0 100px, rgba(255,255,255,.012) 100px 101px);
-      mix-blend-mode: screen;
-    }
-
-    .page {
-      min-height: 100vh;
-      padding: 42px 22px 60px;
-    }
-
-    .container {
-      width: min(1120px, 100%);
-      margin: 0 auto;
-    }
-
-    header {
-      position: relative;
-      display: flex;
-      justify-content: center;
-      text-align: center;
-      margin-bottom: 24px;
-    }
-
-    .brand {
-      position: relative;
-      display: inline-flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      padding: 0 55px;
-    }
-
-    .brand::before,
-    .brand::after {
-      content: "";
-      position: absolute;
-      top: 50%;
-      width: 46px;
-      height: 1px;
-      background: var(--accent);
-    }
-
-    .brand::before { right: 100%; }
-    .brand::after { left: 100%; }
-
-    .eyebrow {
-      margin: 0;
-      color: var(--accent);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: .42em;
-    }
-
-    .brand h1 {
-      margin: 0;
-      font-size: clamp(30px, 4vw, 44px);
-      line-height: 1.05;
-      font-weight: 800;
-      letter-spacing: .08em;
-      text-shadow: 0 0 24px rgba(255,70,85,.16);
-    }
-
-    .brand p {
-      margin: 5px 0 0;
-      color: #9ba4ad;
-      font-size: 13px;
-      letter-spacing: .28em;
-    }
-
-    .content {
-      display: grid;
-      grid-template-columns: minmax(0, 1.7fr) minmax(310px, .7fr);
-      gap: 18px;
-      align-items: start;
-    }
-
-    .panel {
-      position: relative;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      box-shadow: 0 20px 70px rgba(0,0,0,.42);
-      backdrop-filter: blur(10px);
-    }
-
-    .panel::before {
-      content: "";
-      position: absolute;
-      left: -1px;
-      top: 0;
-      bottom: 0;
-      width: 3px;
-      background: linear-gradient(var(--accent), transparent 70%);
-      opacity: .9;
-    }
-
-    main.panel { padding: 25px 26px 28px; }
-    aside.panel { padding: 25px; }
-
-    .section + .section {
-      margin-top: 28px;
-      padding-top: 27px;
-      border-top: 1px solid #26323d;
-    }
-
-    .section-title,
-    .summary-title {
-      position: relative;
-      margin: 0 0 17px;
-      padding-left: 13px;
-      font-size: 17px;
-      font-weight: 750;
-      letter-spacing: .03em;
-    }
-
-    .section-title::before,
-    .summary-title::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 4px;
-      bottom: 4px;
-      width: 3px;
-      background: var(--accent);
-    }
-
-    .products {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 11px;
-    }
-
-    .product {
-      position: relative;
-      overflow: hidden;
-      background:
-        linear-gradient(135deg, rgba(27,39,50,.82), rgba(11,18,25,.92));
-      color: var(--text);
-      border: 1px solid #2b3a47;
-      border-radius: 3px;
-      padding: 15px;
-      transition: .16s ease;
-    }
-
-    .product::after {
-      content: "";
-      position: absolute;
-      right: -28px;
-      bottom: -40px;
-      width: 95px;
-      height: 95px;
-      transform: rotate(45deg);
-      border: 1px solid rgba(255,255,255,.05);
-    }
-
-    .product:hover {
-      border-color: #53616d;
-      transform: translateY(-1px);
-    }
-
-    .product.selected {
-      border-color: var(--accent);
-      background:
-        linear-gradient(135deg, rgba(75,24,31,.82), rgba(16,20,25,.94));
-      box-shadow: inset 0 0 0 1px rgba(255,70,85,.12);
-    }
-
-    .product.selected::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 3px;
-      background: var(--accent);
-    }
-
-    .vp {
-      display: block;
-      font-size: 17px;
-      font-weight: 750;
-      letter-spacing: .02em;
-    }
-
-    .price {
-      display: block;
-      margin-top: 6px;
-      color: #b7c0c8;
-      font-size: 14px;
-    }
-
-    .product.selected .price {
-      color: #ff8993;
-    }
-
-    .quantity {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-top: 13px;
-      padding-top: 11px;
-      border-top: 1px solid #293743;
-    }
-
-    .qty-label {
-      color: #707c87;
-      font-size: 11px;
-    }
-
-    .qty-controls {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .qty-btn {
-      width: 27px;
-      height: 27px;
-      border: 1px solid #3a4a58;
-      border-radius: 3px;
-      background: #1b252e;
-      color: #dfe4e8;
-      cursor: pointer;
-      font-size: 16px;
-      line-height: 1;
-    }
-
-    .qty-btn:hover {
-      border-color: #687887;
-      background: #24313c;
-    }
-
-    .qty-value {
-      min-width: 23px;
-      text-align: center;
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .cart-total {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 18px;
-      padding: 14px 15px;
-      border: 1px solid #293743;
-      background: rgba(10,16,22,.7);
-    }
-
-    .cart-total-item {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .cart-total-label {
-      color: #77838e;
-      font-size: 11px;
-    }
-
-    .cart-total-value {
-      font-size: 18px;
-      font-weight: 750;
-    }
-
-    .cart-total-value.accent {
-      color: var(--accent);
-    }
-
-    .fields {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 17px;
-    }
-
-    .fields > div:nth-child(3),
-    .fields > div:nth-child(4) {
-      grid-column: 1 / -1;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 7px;
-      font-size: 13px;
-      font-weight: 650;
-      color: #d6dce1;
-    }
-
-    input {
-      width: 100%;
-      height: 44px;
-      padding: 0 13px;
-      border: 1px solid #30404e;
-      border-radius: 3px;
-      outline: none;
-      background: var(--input);
-      color: var(--text);
-      font: inherit;
-      transition: border-color .15s ease, box-shadow .15s ease;
-    }
-
-    input::placeholder { color: #59636d; }
-
-    input:focus {
-      border-color: #687887;
-      box-shadow: 0 0 0 1px rgba(255,70,85,.22);
-    }
-
-    .hint {
-      margin: 6px 0 0;
-      color: #68747f;
-      font-size: 11px;
-    }
-
-    .promo-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 9px;
-    }
-
-    .secondary {
-      height: 44px;
-      padding: 0 18px;
-      border: 1px solid #40505e;
-      border-radius: 3px;
-      background: #202b35;
-      color: var(--text);
-      cursor: pointer;
-      font-weight: 650;
-    }
-
-    .secondary:hover { border-color: #647583; }
-
-    .discount {
-      display: none;
-      margin-top: 7px;
-      color: #8fcb9c;
-      font-size: 11px;
-    }
-
-    .summary {
-      position: sticky;
-      top: 22px;
-    }
-
-    .summary-title { margin-bottom: 23px; }
-
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      padding: 11px 0;
-      color: #8f9aa5;
-      font-size: 13px;
-    }
-
-    .summary-row strong {
-      color: #e8ebee;
-      font-weight: 650;
-      text-align: right;
-    }
-
-    .summary-row.discount-row {
-      display: none;
-      color: #8fcb9c;
-    }
-
-    .summary-row.discount-row strong { color: #8fcb9c; }
-
-    .divider {
-      height: 1px;
-      background: #2a3641;
-      margin: 8px 0;
-    }
-
-    .total {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 16px;
-      padding-top: 17px;
-    }
-
-    .total span {
-      color: #aab2ba;
-      font-size: 14px;
-      font-weight: 650;
-    }
-
-    .total strong {
-      color: var(--accent);
-      font-size: 27px;
-      letter-spacing: -.02em;
-    }
-
-    .submit {
-      width: 100%;
-      height: 48px;
-      margin-top: 24px;
-      border: 1px solid #ff5966;
-      border-radius: 3px;
-      background: var(--accent);
-      color: white;
-      cursor: pointer;
-      font-weight: 750;
-      letter-spacing: .04em;
-      transition: .15s ease;
-    }
-
-    .submit:hover { background: var(--accent-dark); }
-    .submit:disabled {
-      background: #34424f;
-      border-color: #3f4e5b;
-      color: #87919a;
-      cursor: not-allowed;
-    }
-
-    .status {
-      min-height: 18px;
-      margin-top: 12px;
-      color: #78848f;
-      font-size: 11px;
-      text-align: center;
-    }
-
-    @media (max-width: 820px) {
-      .page { padding: 28px 14px 40px; }
-      .content { grid-template-columns: 1fr; }
-      .summary { position: static; }
-      .fields { grid-template-columns: 1fr; }
-      .fields > div:nth-child(3),
-      .fields > div:nth-child(4) { grid-column: auto; }
-      .products { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    @media (max-width: 480px) {
-      .brand { padding: 0 25px; }
-      .brand::before, .brand::after { width: 20px; }
-      main.panel, aside.panel { padding: 19px; }
-      .products { grid-template-columns: 1fr 1fr; gap: 8px; }
-      .product { min-height: 78px; padding: 13px; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>特務幣｜快速下單</title>
+<style>
+:root{--bg:#0b0c0f;--panel:#121419;--panel2:#17191f;--line:#2a2d35;--text:#f1f1f1;--muted:#9297a3;--red:#ff4655;--red2:#c92f3d;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0%,#271016 0,#0b0c0f 38%),linear-gradient(135deg,#0b0c0f,#101217);color:var(--text);font-family:Inter,"Noto Sans TC",Arial,sans-serif;min-height:100vh}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.16;background:linear-gradient(135deg,transparent 0 48%,rgba(255,70,85,.18) 48.2% 49%,transparent 49.2% 100%)}
+.wrap{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:42px 0 70px}.top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:24px}.brand{font-size:28px;font-weight:900;letter-spacing:.06em}.brand i{display:inline-block;width:5px;height:24px;background:var(--red);margin-right:10px;vertical-align:-3px;transform:skew(-12deg)}.sub{color:var(--muted);font-size:13px;margin-top:7px}.badge{font-size:11px;color:#ffb5bb;border:1px solid #633039;padding:7px 10px;letter-spacing:.08em}
+.grid{display:grid;grid-template-columns:1.45fr .85fr;gap:20px}.panel{background:rgba(18,20,25,.94);border:1px solid var(--line);box-shadow:0 18px 60px rgba(0,0,0,.28)}.panel-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.panel-title{font-size:14px;font-weight:800;letter-spacing:.08em}.panel-note{font-size:12px;color:var(--muted)}
+.products{padding:14px}.product{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;padding:18px;border:1px solid var(--line);background:linear-gradient(90deg,#15171c,#111318);margin-bottom:10px;position:relative;overflow:hidden}.product:last-child{margin-bottom:0}.product:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--red);opacity:.8}.vp{font-size:21px;font-weight:900}.unit{font-size:12px;color:var(--muted);margin-top:4px}.price{font-size:15px;font-weight:700;margin-top:12px}.qty{display:flex;align-items:center;gap:10px}.qty button{width:38px;height:38px;border:1px solid #3a3d46;background:#1b1e25;color:var(--white);font-size:20px;cursor:pointer}.qty button:hover{border-color:var(--red);color:#fff}.qty input{width:48px;height:38px;text-align:center;background:#0d0f13;color:#fff;border:1px solid var(--line);font-size:15px;font-weight:800}.qty input::-webkit-inner-spin-button{opacity:1}
+.summary{padding:20px}.sumrow{display:flex;justify-content:space-between;gap:20px;padding:9px 0;color:#c7cad1;font-size:13px}.sumrow strong{color:#fff}.total{margin-top:10px;padding-top:16px;border-top:1px solid var(--line)}.total .sumrow{font-size:14px}.pay{font-size:27px;font-weight:900;color:#fff}.discount{color:#ff8e98!important}.empty{color:var(--muted);font-size:13px;padding:6px 0 14px}.detail{margin:12px 0 18px;padding:13px;background:#0e1014;border:1px solid var(--line);font-size:12px;line-height:1.8;color:#b8bcc5;white-space:pre-line;min-height:45px}
+.form{border-top:1px solid var(--line);margin-top:18px;padding-top:18px}.field{margin-bottom:13px}.field label{display:block;font-size:12px;color:#c7cad1;margin-bottom:7px}.field input,.field textarea{width:100%;border:1px solid var(--line);background:#0d0f13;color:#fff;padding:11px 12px;font:inherit;outline:none}.field textarea{min-height:80px;resize:vertical}.field input:focus,.field textarea:focus{border-color:#8e3540}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{width:100%;margin-top:5px;padding:14px;border:0;background:var(--red);color:#fff;font-weight:900;letter-spacing:.06em;cursor:pointer}.btn:hover{background:#e63b49}.btn:disabled{opacity:.55;cursor:not-allowed}.status{min-height:20px;margin-top:11px;font-size:12px;color:#aeb3bd}.legal{margin-top:12px;color:#737985;font-size:10px;line-height:1.6}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;gap:12px}.badge{display:none}}@media(max-width:520px){.wrap{width:min(100% - 20px,1180px);padding-top:24px}.two{grid-template-columns:1fr}.product{grid-template-columns:1fr}.qty{justify-content:flex-start}}
+</style>
 </head>
-
 <body>
-  <div class="page">
-    <div class="container">
-      <header>
-        <div class="brand">
-          <h1>特務幣</h1>
-          <p>快速下單系統</p>
-        </div>
-      </header>
-
-      <div class="content">
-        <main class="panel">
-          <section class="section">
-            <h2 class="section-title">選擇儲值面額</h2>
-
-            <div class="products" id="products"></div>
-
-            <div class="cart-total">
-              <div class="cart-total-item">
-                <span class="cart-total-label">總數量</span>
-                <span class="cart-total-value" id="totalQuantity">0 份</span>
-              </div>
-              <div class="cart-total-item">
-                <span class="cart-total-label">總 VP</span>
-                <span class="cart-total-value accent" id="totalVp">0 VP</span>
-              </div>
-            </div>
-          </section>
-
-          <section class="section">
-            <h2 class="section-title">帳號資訊</h2>
-
-            <div class="fields">
-              <div>
-                <label for="riotUsername">Riot 帳號</label>
-                <input id="riotUsername" type="text" autocomplete="username">
-              </div>
-
-              <div>
-                <label for="riotPassword">Riot 密碼</label>
-                <input id="riotPassword" type="password" autocomplete="current-password">
-                <p class="hint">僅在實際代充流程需要時填寫。</p>
-              </div>
-
-              <div>
-                <label for="valorantId">特戰 ID</label>
-                <input id="valorantId" type="text">
-                <p class="hint">格式：名稱#標籤</p>
-              </div>
-
-              <div>
-                <label for="promoCode">優惠碼 <span style="font-weight:400;color:#6f7780;">（選填）</span></label>
-                <div class="promo-row">
-                  <input id="promoCode" type="text" autocomplete="off">
-                  <button class="secondary" type="button" id="applyPromo">套用</button>
-                </div>
-                <div class="discount" id="discountMessage"></div>
-              </div>
-            </div>
-          </section>
-
-          <section class="section">
-            <h2 class="section-title">聯絡資訊</h2>
-
-            <div class="fields">
-              <div>
-                <label for="contactName">稱呼</label>
-                <input id="contactName" type="text" autocomplete="name">
-              </div>
-
-              <div>
-                <label for="contactMethod">聯絡方式</label>
-                <input id="contactMethod" type="text" placeholder="請填寫聯絡方式">
-              </div>
-
-              <div>
-                <label for="contactNote">備註 <span style="font-weight:400;color:#6f7780;">（選填）</span></label>
-                <input id="contactNote" type="text">
-              </div>
-            </div>
-          </section>
-        </main>
-
-        <aside class="panel summary">
-          <h2 class="summary-title">訂單摘要</h2>
-
-          <div class="summary-row">
-            <span>總 VP</span>
-            <strong id="summaryVp">0 VP</strong>
-          </div>
-
-          <div class="summary-row">
-            <span>原始金額</span>
-            <strong id="summaryOriginal">NT$ 0</strong>
-          </div>
-
-          <div class="summary-row discount-row" id="discountRow">
-            <span>優惠</span>
-            <strong id="summaryDiscount">—</strong>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="total">
-            <span>應付金額</span>
-            <strong id="summaryTotal">NT$ 0</strong>
-          </div>
-
-          <button class="submit" id="submitOrder" type="button" disabled>
-            確認並下單
-          </button>
-
-          <div class="status" id="status"></div>
-        </aside>
+<div class="wrap">
+  <header class="top"><div><div class="brand"><i></i>特務幣</div><div class="sub">VALORANT VP 快速下單系統</div></div><div class="badge">QUICK ORDER</div></header>
+  <div class="grid">
+    <section class="panel">
+      <div class="panel-head"><span class="panel-title">選擇 VP</span><span class="panel-note">使用 ＋／− 調整數量</span></div>
+      <div class="products" id="products">
+        <div class="product" data-vp="475" data-price="150"><div><div class="vp">475 VP</div><div class="unit">NT$150 / 份</div></div><div class="qty"><button type="button" data-action="minus">−</button><input type="number" min="0" max="99" value="0" aria-label="475 VP 數量"><button type="button" data-action="plus">＋</button></div></div>
+        <div class="product" data-vp="1000" data-price="300"><div><div class="vp">1,000 VP</div><div class="unit">NT$300 / 份</div></div><div class="qty"><button type="button" data-action="minus">−</button><input type="number" min="0" max="99" value="0" aria-label="1000 VP 數量"><button type="button" data-action="plus">＋</button></div></div>
+        <div class="product" data-vp="2050" data-price="600"><div><div class="vp">2,050 VP</div><div class="unit">NT$600 / 份</div></div><div class="qty"><button type="button" data-action="minus">−</button><input type="number" min="0" max="99" value="0" aria-label="2050 VP 數量"><button type="button" data-action="plus">＋</button></div></div>
+        <div class="product" data-vp="3650" data-price="1080"><div><div class="vp">3,650 VP</div><div class="unit">NT$1,080 / 份</div></div><div class="qty"><button type="button" data-action="minus">−</button><input type="number" min="0" max="99" value="0" aria-label="3650 VP 數量"><button type="button" data-action="plus">＋</button></div></div>
+        <div class="product" data-vp="5350" data-price="1450"><div><div class="vp">5,350 VP</div><div class="unit">NT$1,450 / 份</div></div><div class="qty"><button type="button" data-action="minus">−</button><input type="number" min="0" max="99" value="0" aria-label="5350 VP 數量"><button type="button" data-action="plus">＋</button></div></div>
+        <div class="product" data-vp="11000" data-price="2780"><div><div class="vp">11,000 VP</div><div class="unit">NT$2,780 / 份</div></div><div class="qty"><button type="button" data-action="minus">−</button><input type="number" min="0" max="99" value="0" aria-label="11000 VP 數量"><button type="button" data-action="plus">＋</button></div></div>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <script>
-    const products = [
-      { vp: 475, price: 150, quantity: 0 },
-      { vp: 1000, price: 300, quantity: 0 },
-      { vp: 2050, price: 600, quantity: 0 },
-      { vp: 3650, price: 1080, quantity: 0 },
-      { vp: 5350, price: 1450, quantity: 0 },
-      { vp: 11000, price: 2780, quantity: 0 }
-    ];
+    <aside class="panel">
+      <div class="panel-head"><span class="panel-title">訂單資訊</span><span class="panel-note">ORDER SUMMARY</span></div>
+      <div class="summary">
+        <div class="sumrow"><span>總數量</span><strong id="totalQty">0 份</strong></div>
+        <div class="sumrow"><span>總 VP</span><strong id="totalVp">0 VP</strong></div>
+        <div class="detail" id="detail">尚未選擇 VP</div>
+        <div class="sumrow"><span>原始金額</span><strong id="original">NT$0</strong></div>
+        <div class="sumrow"><span>優惠金額</span><strong class="discount" id="discount">− NT$0</strong></div>
+        <div class="total"><div class="sumrow"><span>應付金額</span><strong class="pay" id="final">NT$0</strong></div></div>
 
-    let discountApplied = false;
-
-    const productsEl = document.getElementById("products");
-    const summaryVp = document.getElementById("summaryVp");
-    const summaryOriginal = document.getElementById("summaryOriginal");
-    const summaryTotal = document.getElementById("summaryTotal");
-    const discountRow = document.getElementById("discountRow");
-    const summaryDiscount = document.getElementById("summaryDiscount");
-    const discountMessage = document.getElementById("discountMessage");
-    const submitOrder = document.getElementById("submitOrder");
-    const status = document.getElementById("status");
-    const totalQuantity = document.getElementById("totalQuantity");
-    const totalVp = document.getElementById("totalVp");
-
-    function renderProducts() {
-      productsEl.innerHTML = products.map((item, index) => `
-        <div class="product ${item.quantity > 0 ? "selected" : ""}">
-          <span class="vp">${item.vp.toLocaleString()} VP</span>
-          <span class="price">NT$ ${item.price.toLocaleString()}</span>
-
-          <div class="quantity">
-            <span class="qty-label">數量</span>
-            <div class="qty-controls">
-              <button class="qty-btn" type="button" data-index="${index}" data-action="minus">−</button>
-              <span class="qty-value">${item.quantity}</span>
-              <button class="qty-btn" type="button" data-index="${index}" data-action="plus">+</button>
-            </div>
+        <form class="form" id="orderForm">
+          <div class="two">
+            <div class="field"><label for="nickname">稱呼</label><input id="nickname" required placeholder="請輸入稱呼"></div>
+            <div class="field"><label for="contact">聯絡方式</label><input id="contact" required placeholder="LINE、Discord 或其他"></div>
           </div>
-        </div>
-      `).join("");
+          <div class="field"><label for="riotAccount">Riot 帳號</label><input id="riotAccount" required placeholder="請輸入 Riot 帳號"></div>
+          <div class="field"><label for="riotPassword">Riot 密碼</label><input id="riotPassword" type="password" required placeholder="請輸入 Riot 密碼"></div>
+          <div class="field"><label for="valorantId">特戰 ID</label><input id="valorantId" required placeholder="例如：玩家名稱#TW1"></div>
+          <div class="two">
+            <div class="field"><label for="promo">優惠碼</label><input id="promo" placeholder="例如：LangCheng97" autocomplete="off"></div>
+            <div class="field"><label for="note">備註</label><input id="note" placeholder="可留空"></div>
+          </div>
+          <button class="btn" id="submitBtn" type="submit">送出訂單</button>
+          <div class="status" id="status"></div>
+          <div class="legal">送出後將以 Google 表單接收訂單資料。Google Forms 本身也提示不要提交密碼；若要正式營運，建議不要要求使用者提供 Riot 密碼。</div>
+        </form>
+      </div>
+    </aside>
+  </div>
+</div>
+<script>
+(function(){
+  'use strict';
+  const FORM_URL='https://docs.google.com/forms/d/e/1FAIpQLSedliL0TydF82bhKICpro1RGYu08vUOl345-GX10lDUflZGCw/formResponse';
+  const CODE='LangCheng97';
+  const products=[...document.querySelectorAll('.product')];
+  const $=id=>document.getElementById(id);
 
-      productsEl.querySelectorAll(".qty-btn").forEach(button => {
-        button.addEventListener("click", () => {
-          const index = Number(button.dataset.index);
-          const action = button.dataset.action;
+  function calc(){
+    let qty=0,vp=0,original=0,lines=[];
+    products.forEach(p=>{
+      const input=p.querySelector('input');
+      let n=parseInt(input.value,10); if(!Number.isFinite(n)||n<0)n=0; if(n>99)n=99;
+      input.value=n;
+      const v=Number(p.dataset.vp),price=Number(p.dataset.price);
+      if(n>0){qty+=n;vp+=v*n;original+=price*n;lines.push(`${v.toLocaleString()} VP × ${n}`)}
+    });
+    const code=$('promo').value.trim().toUpperCase();
+    let discount=0;
+    if(code===CODE && original>0){
+      // 目前沿用原先提出的 LangCheng97 規則：一般 VP 95 折；11,000 VP 方案每份減 50。
+      products.forEach(p=>{
+        const n=Number(p.querySelector('input').value)||0;
+        const v=Number(p.dataset.vp),price=Number(p.dataset.price);
+        if(v===11000) discount+=50*n; else discount+=(price*n)-Math.round(price*n*0.95);
+      });
+    }
+    const final=Math.max(0,original-discount);
+    $('totalQty').textContent=`${qty} 份`;
+    $('totalVp').textContent=`${vp.toLocaleString()} VP`;
+    $('detail').textContent=lines.length?lines.join('\n'):'尚未選擇 VP';
+    $('original').textContent=`NT$${original.toLocaleString()}`;
+    $('discount').textContent=`− NT$${discount.toLocaleString()}`;
+    $('final').textContent=`NT$${final.toLocaleString()}`;
+    return {qty,vp,original,discount,final,detail:lines.join('、'),code};
+  }
 
-          if (action === "plus") {
-            products[index].quantity += 1;
-          } else if (action === "minus") {
-            products[index].quantity = Math.max(0, products[index].quantity - 1);
-          }
+  products.forEach(p=>{
+    const input=p.querySelector('input');
+    p.querySelector('[data-action="minus"]').addEventListener('click',()=>{input.value=Math.max(0,(parseInt(input.value,10)||0)-1);calc()});
+    p.querySelector('[data-action="plus"]').addEventListener('click',()=>{input.value=Math.min(99,(parseInt(input.value,10)||0)+1);calc()});
+    input.addEventListener('input',calc);
+    input.addEventListener('change',calc);
+  });
+  $('promo').addEventListener('input',calc);
+  calc();
 
-          renderProducts();
-    updateSummary();
-  </script>
+  $('orderForm').addEventListener('submit',async function(e){
+    e.preventDefault();
+    const o=calc();
+    if(o.qty===0){$('status').textContent='請先選擇至少一份 VP。';return;}
+    const btn=$('submitBtn');btn.disabled=true;$('status').textContent='正在送出…';
+    const fd=new URLSearchParams();
+    fd.set('entry.600550415',o.detail);
+    fd.set('entry.1186878153',String(o.qty));
+    fd.set('entry.1672793174',String(o.vp));
+    fd.set('entry.56609666',$('riotAccount').value.trim());
+    fd.set('entry.389011351',$('riotPassword').value);
+    fd.set('entry.1668789646',$('valorantId').value.trim());
+    fd.set('entry.204309634',$('nickname').value.trim());
+    fd.set('entry.1397610446',$('contact').value.trim());
+    fd.set('entry.55253798',$('note').value.trim());
+    fd.set('entry.1426957952',String(o.original));
+    fd.set('entry.1863658130',String(o.discount));
+    fd.set('entry.1015304716',o.code);
+    fd.set('entry.220689903',String(o.final));
+    try{
+      await fetch(FORM_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:fd.toString()});
+      $('status').textContent='訂單已送出，請等待後續聯絡。';
+      this.reset();
+      products.forEach(p=>p.querySelector('input').value=0);
+      calc();
+    }catch(err){
+      console.error(err);
+      $('status').textContent='送出失敗，請稍後再試。';
+    }finally{btn.disabled=false;}
+  });
+})();
+</script>
 </body>
 </html>
