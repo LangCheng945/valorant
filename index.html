@@ -141,7 +141,7 @@ h1 em{font-style:normal;color:var(--red)}
     <div class="row"><span>總數量</span><strong class="accent" id="totalQty">0 份</strong></div>
     <div class="row"><span>總 VP</span><strong class="accent" id="totalVp">0 VP</strong></div>
     <div class="row"><span>原始金額</span><strong id="original">NT$ 0</strong></div>
-    <div class="row code-row"><span>優惠碼</span><input id="promo" value="LANGCHENG98" aria-label="優惠碼"></div>
+    <div class="row code-row"><span>優惠碼</span><input id="promo" value="LANGCHENG" aria-label="優惠碼"></div>
     <div class="row"><span>優惠金額</span><strong style="color:#20d67b" id="discount">- NT$ 0</strong></div>
   </div>
   <div class="total"><span>應付金額</span><strong id="final">NT$ 0</strong></div>
@@ -204,13 +204,13 @@ const ENTRY = {
 //   fixed     = 固定折價，例如 value: 50 代表折 NT$50
 // =============================
 const PROMO_CODES = {
-  LANGCHENG98: { type: "percent", value: 2, name: "LangCheng98" },
+  LANGCHENG: { type: "percent", value: 2, name: "LangCheng" },
 
   // 範例：之後要啟用其他優惠碼時，把 // 拿掉即可。
-   HANDSOME95: {
+   HANDSOME97: {
      type: "percent",
-     value: 5,
-     name: "HANDSOME95"
+     value: 3,
+     name: "HANDSOME97"
    },
 
   // WELCOME50: {
