@@ -4,22 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>連成特務幣 | 快速下單系統</title>
-  <!-- 載入 Tailwind CSS 快速排版 -->
+  <!-- 載入 Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- 載入 React 與 ReactDOM -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <!-- 載入 Babel 以便在瀏覽器中編譯 JSX -->
-  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <!-- 改用 cdnjs 來源，連線更穩定不會白畫面 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.3/babel.min.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-800">
-  <div id="root"></div>
+  
+  <div id="root">
+    <!-- 如果程式碼報錯，就會停留顯示這段文字；如果成功就會瞬間被表單取代 -->
+    <div style="text-align: center; margin-top: 100px; font-family: sans-serif;">
+      <h2 style="font-size: 24px; font-weight: bold; color: #f97316;">系統載入中... 🐾</h2>
+      <p style="color: #6b7280; margin-top: 10px;">如果畫面一直卡在這裡沒有出現表單<br>請按下 <b>F12</b> 打開開發者工具，截圖 <b>Console (主控台)</b> 給我看！</p>
+    </div>
+  </div>
 
   <script type="text/babel">
     const { useState, useEffect } = React;
 
     const App = () => {
-      
+      // 商品定價表
       const products = [
         { vp: 475, price: 150 },
         { vp: 1000, price: 300 },
@@ -30,12 +36,16 @@
       ];
 
       const [selectedItem, setSelectedItem] = useState(null);
-      const [riotId, setRiotId] = useState("");
+      const [riotUsername, setRiotUsername] = useState("");
+      const [riotPassword, setRiotPassword] = useState("");
+      const [valorantId, setValorantId] = useState("");
+      
       const [promoCode, setPromoCode] = useState("");
       const [discountApplied, setDiscountApplied] = useState(false);
       const [finalPrice, setFinalPrice] = useState(0);
+      const [isSubmitting, setIsSubmitting] = useState(false);
 
-      // 當選擇商品或套用折扣時，重新計算價格
+      // 計算價格邏輯
       useEffect(() => {
         if (!selectedItem) {
           setFinalPrice(0);
@@ -45,11 +55,9 @@
         let price = selectedItem.price;
         if (discountApplied) {
           if (selectedItem.vp >= 11000) {
-            // 大面額固定折抵 50 元 (保護利潤)
-            price = price - 50;
+            price = price - 50; // 大面額保護利潤
           } else {
-            // 小面額套用 95 折，並四捨五入
-            price = Math.round(price * 0.95);
+            price = Math.round(price * 0.95); // 小面額95折
           }
         }
         setFinalPrice(price);
@@ -66,34 +74,62 @@
         }
       };
 
-      // 模擬送出訂單
+      // 送出訂單至 Google 表單
       const handleSubmit = (e) => {
         e.preventDefault();
         if (!selectedItem) return alert("請先選擇要儲值的面額！");
-        if (!riotId) return alert("請填寫您的 Riot 帳號！");
+        if (!riotUsername) return alert("請填寫您的 Riot 帳號！");
+        if (!riotPassword) return alert("請填寫您的 Riot 密碼！");
+        if (!valorantId) return alert("請填寫您的特戰 ID！");
 
-        const orderData = {
-          vp: selectedItem.vp,
-          originalPrice: selectedItem.price,
-          finalPrice: finalPrice,
-          riotId: riotId,
-          promoUsed: discountApplied ? promoCode.toUpperCase() : "無"
-        };
+        setIsSubmitting(true);
 
-        // 這裡未來可以替換成 fetch()，把資料傳送到你的 Discord 或 LINE Webhook
-        console.log("訂單資料準備送出：", orderData);
-        alert(`🎉 訂單已建立！\n商品：${orderData.vp} VP\n應付金額：NT$ ${orderData.finalPrice}\nRiot帳號：${orderData.riotId}\n\n（在真實環境中，這會自動傳送到你的手機通知）`);
+        const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSedliL0TydF82bhKICpro1RGYu08vUOl345-GX10lDUflZGCw/formResponse";
+        const formData = new URLSearchParams();
+        
+        // 對應你的 6 個表單欄位
+        formData.append("entry.600550415", selectedItem.vp + " VP");
+        formData.append("entry.1186878153", riotUsername);
+        formData.append("entry.1672793174", riotPassword);
+        formData.append("entry.56609666", valorantId);
+        formData.append("entry.1668789646", finalPrice.toString());
+        formData.append("entry.389011351", discountApplied ? promoCode.toUpperCase() : "無");
+
+        // 背景發送請求
+        fetch(formUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: formData.toString(),
+        })
+        .then(() => {
+          alert(`🎉 訂單已成功送出！\n\n應付總額：NT$ ${finalPrice}\n請完成匯款後，我們會盡速為您的帳號充值。`);
+          // 清空表單
+          setRiotUsername("");
+          setRiotPassword("");
+          setValorantId("");
+          setPromoCode("");
+          setDiscountApplied(false);
+          setSelectedItem(null);
+        })
+        .catch((error) => {
+          alert("訂單送出失敗，請檢查網路狀態。");
+          console.error("Error:", error);
+        })
+        .finally(() => {
+          setIsSubmitting(false);
+        });
       };
 
       return (
         <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg">
-          {/* Header */}
           <header className="bg-orange-500 text-white p-4 text-center sticky top-0 z-10 shadow-md">
             <h1 className="text-xl font-bold">特務幣 | 快速下單系統</h1>
           </header>
 
           <main className="p-4">
-            {/* Step 1: 選擇商品 */}
             <h2 className="text-lg font-bold mb-3 border-b-2 border-orange-200 pb-1">1. 選擇儲值面額</h2>
             <div className="grid grid-cols-2 gap-3 mb-6">
               {products.map((item) => (
@@ -107,10 +143,9 @@
                   }`}
                 >
                   <div className="text-center font-black text-gray-700 mb-1 flex justify-center items-center gap-1">
-                    <img src="https://freelogopng.com/images/all_img/1665507300valorant-points-icon.png" alt="VP" className="w-5 h-5 opacity-80" />
+                    <svg className="w-5 h-5 text-gray-800" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13h-13L12 6.5z"/></svg>
                     {item.vp}
                   </div>
-                  <div className="text-center text-sm text-gray-500">特務幣</div>
                   <div className="text-center mt-2 bg-gray-800 text-white rounded text-sm py-1 font-bold">
                     NT$ {item.price}
                   </div>
@@ -118,21 +153,43 @@
               ))}
             </div>
 
-            {/* Step 2: 填寫資料與折扣 */}
             <h2 className="text-lg font-bold mb-3 border-b-2 border-orange-200 pb-1">2. 填寫帳號與優惠</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
+              
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Riot 帳號 (包含 #標籤)</label>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Riot 帳號 (登入用)</label>
                 <input 
                   type="text" 
-                  value={riotId}
-                  onChange={(e) => setRiotId(e.target.value)}
-                  placeholder="例如：Player123#TWN"
-                  className="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-orange-500"
+                  value={riotUsername}
+                  onChange={(e) => setRiotUsername(e.target.value)}
+                  placeholder="請輸入 Riot 登入帳號"
+                  className="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-orange-500 bg-gray-50"
                 />
               </div>
 
               <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Riot 密碼</label>
+                <input 
+                  type="password" 
+                  value={riotPassword}
+                  onChange={(e) => setRiotPassword(e.target.value)}
+                  placeholder="請輸入密碼 (代充需要)"
+                  className="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-orange-500 bg-gray-50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">特戰 ID (包含 #標籤)</label>
+                <input 
+                  type="text" 
+                  value={valorantId}
+                  onChange={(e) => setValorantId(e.target.value)}
+                  placeholder="例如：Player123#TWN"
+                  className="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-orange-500 bg-gray-50"
+                />
+              </div>
+
+              <div className="pt-2">
                 <label className="block text-sm font-bold text-gray-700 mb-1">專屬優惠碼</label>
                 <div className="flex gap-2">
                   <input 
@@ -155,7 +212,6 @@
                 )}
               </div>
 
-              {/* 結帳明細 */}
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mt-6">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600">已選面額：</span>
@@ -175,9 +231,10 @@
 
               <button 
                 type="submit" 
-                className="w-full bg-orange-500 text-white text-lg font-bold py-3 rounded-lg hover:bg-orange-600 shadow-md transition-colors mt-4"
+                disabled={isSubmitting}
+                className="w-full bg-orange-500 text-white text-lg font-bold py-3 rounded-lg hover:bg-orange-600 shadow-md transition-colors mt-4 disabled:bg-gray-400"
               >
-                前往匯款並送出訂單
+                {isSubmitting ? "訂單傳送中..." : "確認金額並下單"}
               </button>
             </form>
           </main>
