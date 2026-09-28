@@ -153,6 +153,26 @@ h1 em{font-style:normal;color:var(--red)}
 .password-toggle:focus-visible{outline:1px solid var(--red);outline-offset:2px}
 
 </style>
+
+<style id="lcvl-order-number-style">
+.lcvl-order-number{
+  margin:16px 0;
+  padding:12px 14px;
+  border:1px solid rgba(255,70,85,.28);
+  background:rgba(255,70,85,.07);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.lcvl-order-number span{color:var(--muted,#9da8be);font-size:13px}
+.lcvl-order-number strong{
+  color:var(--text,#f4f6fb);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  letter-spacing:.08em;
+}
+</style>
+
 </head>
 <body>
 <div class="container">
@@ -366,15 +386,29 @@ document.addEventListener("keydown",(e)=>{
 });
 
 document.getElementById("submitBtn").onclick=async()=>{
+  // 每次實際送單只建立一次訂單編號
+  if (!window.__LCVL_ORDER_NUMBER__) {
+    window.__LCVL_ORDER_NUMBER__ = window.generateLCVLOrderNumber();
+  }
+  const orderNumber = window.__LCVL_ORDER_NUMBER__;
+
   const c=calc();
   if(c.totalQty===0){alert("請先選擇 VP 數量");return;}
   const data=new URLSearchParams();
+
+  // 訂單編號直接寫進現有「備註」欄，不新增 Google Form 欄位
+  const noteEl = document.getElementById("note");
+  const existingNote = noteEl ? noteEl.value.trim() : "";
+  const finalNote = existingNote
+    ? `訂單編號：${orderNumber}\n${existingNote}`
+    : `訂單編號：${orderNumber}`;
+
   const detail=PRODUCTS.map((p,i)=>qty[i]?`${p.vp.toLocaleString()} VP × ${qty[i]}`:null).filter(Boolean).join("、");
   const values={
     [ENTRY.detail]:detail,[ENTRY.totalQty]:c.totalQty,[ENTRY.totalVp]:c.totalVp,
     [ENTRY.riotUser]:document.getElementById("riotUser").value,[ENTRY.riotPass]:document.getElementById("riotPass").value,
     [ENTRY.valorantId]:document.getElementById("valorantId").value,[ENTRY.name]:document.getElementById("name").value,
-    [ENTRY.contact]:document.getElementById("contact").value,[ENTRY.note]:document.getElementById("note").value,
+    [ENTRY.contact]:document.getElementById("contact").value,[ENTRY.note]:finalNote,
     [ENTRY.original]:c.original,[ENTRY.discount]:c.discount,[ENTRY.promo]:document.getElementById("promo").value,
     [ENTRY.final]:c.final
   };
@@ -382,6 +416,10 @@ document.getElementById("submitBtn").onclick=async()=>{
   const btn=document.getElementById("submitBtn"); btn.disabled=true; btn.textContent="送出中…";
   try{
     await fetch(FORM_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:data.toString()});
+    const orderNumberEl = document.getElementById("orderNumber");
+    if (orderNumberEl) {
+      orderNumberEl.textContent = orderNumber;
+    }
     const status=document.getElementById("status");
     status.classList.add("show");
     document.body.style.overflow="hidden";
@@ -408,55 +446,33 @@ document.addEventListener("DOMContentLoaded", function(){
 </script>
 
 
+
+
+
 <script id="lcvl-order-number">
 (function () {
   const ORDER_PREFIX = "LC-VL";
 
-  function generateOrderNumber() {
+  window.generateLCVLOrderNumber = function () {
     const now = new Date();
     const yy = String(now.getFullYear()).slice(-2);
     const mm = String(now.getMonth() + 1).padStart(2, "0");
     const dd = String(now.getDate()).padStart(2, "0");
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let random = "";
-    for (let i = 0; i < 5; i++) {
-      random += chars[crypto.getRandomValues(new Uint32Array(1))[0] % chars.length];
+
+    if (window.crypto && crypto.getRandomValues) {
+      for (let i = 0; i < 5; i++) {
+        random += chars[crypto.getRandomValues(new Uint32Array(1))[0] % chars.length];
+      }
+    } else {
+      for (let i = 0; i < 5; i++) {
+        random += chars[Math.floor(Math.random() * chars.length)];
+      }
     }
+
     return `${ORDER_PREFIX}-${yy}${mm}${dd}-${random}`;
-  }
-
-  window.generateLCVLOrderNumber = generateOrderNumber;
-
-  // 如果原頁面有送出按鈕，攔截送出流程，在送出前建立唯一編號。
-  // 不改變原本表單的其他欄位。
-  document.addEventListener("DOMContentLoaded", function () {
-    const form = document.querySelector("form");
-    if (!form) return;
-
-    form.addEventListener("submit", function () {
-      if (!window.__LCVL_ORDER_NUMBER__) {
-        window.__LCVL_ORDER_NUMBER__ = generateOrderNumber();
-      }
-
-      const noteInput =
-        document.getElementById("note") ||
-        document.querySelector('[name="note"]') ||
-        document.querySelector('textarea[placeholder*="備註"]');
-
-      if (noteInput) {
-        const existing = noteInput.value.trim();
-        const prefix = "訂單編號：" + window.__LCVL_ORDER_NUMBER__;
-        if (!existing.includes("訂單編號：")) {
-          noteInput.value = existing ? prefix + "\n" + existing : prefix;
-        }
-      }
-
-      const orderNumberEl = document.getElementById("orderNumber");
-      if (orderNumberEl) {
-        orderNumberEl.textContent = window.__LCVL_ORDER_NUMBER__;
-      }
-    }, { capture: true });
-  });
+  };
 })();
 </script>
 
